@@ -1,11 +1,17 @@
-import { markRaw, shallowRef } from "vue";
+import { computed, markRaw, shallowRef } from "vue";
 import * as THREE from "three";
 import type {
   GeoJSONData,
   BuildingProperties,
   LabelData,
 } from "../types/community";
-import { createBuildingMaterial } from "../utils/threeHelpers";
+import {
+  createBuildingMaterial,
+  computeGeoCenter,
+  createProjector,
+} from "../utils/threeHelpers";
+import { useSceneStore } from "../stores";
+import { storeToRefs } from "pinia";
 
 export interface BuildingMesh extends THREE.Mesh {
   userData: BuildingProperties & {
@@ -29,41 +35,50 @@ export interface RoadMesh extends THREE.Mesh {
   };
 }
 
-const EARTH_SCALE = 111000;
+// const EARTH_SCALE = 111000;
 
 export function useBuilding() {
-  const buildings = shallowRef<BuildingMesh[]>([]);
+  const sceneStore = useSceneStore();
+  const { config } = storeToRefs(sceneStore);
+  const buildings = computed({
+    get() {
+      return config.value.buildings;
+    },
+    set(val) {
+      sceneStore.config.buildings = val;
+    },
+  });
   const roadLists = shallowRef<RoadMesh[]>([]);
   const riverLists = shallowRef<RiverMesh[]>([]);
   const buildingGroup = shallowRef<THREE.Group | null>(null);
 
-  function computeGeoCenter(features: any[]): [number, number] {
-    let sumX = 0;
-    let sumY = 0;
-    let count = 0;
+  // function computeGeoCenter(features: any[]): [number, number] {
+  //   let sumX = 0;
+  //   let sumY = 0;
+  //   let count = 0;
 
-    features.forEach((f) => {
-      if (f.geometry.type !== "Polygon") return;
-      const coords = f.geometry.coordinates[0];
-      coords.forEach(([lng, lat]) => {
-        sumX += lng;
-        sumY += lat;
-        count++;
-      });
-    });
+  //   features.forEach((f) => {
+  //     if (f.geometry.type !== "Polygon") return;
+  //     const coords = f.geometry.coordinates[0];
+  //     coords.forEach(([lng, lat]) => {
+  //       sumX += lng;
+  //       sumY += lat;
+  //       count++;
+  //     });
+  //   });
 
-    return [sumX / count, sumY / count];
-  }
+  //   return [sumX / count, sumY / count];
+  // }
 
-  function createProjector(center: [number, number], scale = 1) {
-    const cosLat = Math.cos((center[1] * Math.PI) / 180);
+  // function createProjector(center: [number, number], scale = 1) {
+  //   const cosLat = Math.cos((center[1] * Math.PI) / 180);
 
-    return (lng: number, lat: number): [number, number] => {
-      const x = (lng - center[0]) * EARTH_SCALE * cosLat * scale;
-      const y = (lat - center[1]) * EARTH_SCALE * scale;
-      return [x, y];
-    };
-  }
+  //   return (lng: number, lat: number): [number, number] => {
+  //     const x = (lng - center[0]) * EARTH_SCALE * cosLat * scale;
+  //     const y = (lat - center[1]) * EARTH_SCALE * scale;
+  //     return [x, y];
+  //   };
+  // }
 
   function generateFromGeoJSON(
     geojson: GeoJSONData,
@@ -195,6 +210,64 @@ export function useBuilding() {
     material.roughness = 0.4;
     material.emissive.set(0x0a3a66);
     material.emissiveIntensity = 0.3;
+
+    material.onBeforeCompile = (shader) => {
+      shader.uniforms.u_time = { value: 0 };
+      shader.uniforms.u_scanColor = { value: new THREE.Color(0x00d4ff) };
+      shader.uniforms.u_scanCenter = { value: new THREE.Vector3(0, 0, 0) };
+      shader.uniforms.u_opacity = { value: 0.6 };
+      shader.vertexShader = shader.vertexShader
+        .replace(
+          "#include <common>",
+          `
+    #include <common>
+    varying vec3 vWorldPosition;
+    `,
+        )
+        .replace(
+          "#include <worldpos_vertex>",
+          `
+    #include <worldpos_vertex>
+    vWorldPosition = worldPosition.xyz;
+    `,
+        );
+
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          "#include <common>",
+          `
+    #include <common>
+    uniform float u_time;
+    uniform vec3 u_scanColor;
+    uniform vec3 u_scanCenter;
+    varying vec3 vWorldPosition;
+    uniform float u_opacity;
+    `,
+        )
+        .replace(
+          "#include <dithering_fragment>",
+          `
+     float dist = distance(vWorldPosition.xz, u_scanCenter.xz);
+
+float maxRadius = 1000.0; // 扫描最大范围
+float cycle = 3.0;        // ⭐ 周期（秒）
+
+float progress = mod(u_time, cycle) / cycle;
+float r = progress * maxRadius;
+
+float ring =
+  smoothstep(r - 40.0, r, dist) -
+  smoothstep(r, r + 80.0, dist);
+
+float trailFade = exp(-(r - dist) * 0.01);
+trailFade *= step(dist, r);
+gl_FragColor.rgb += u_scanColor * trailFade * 0.5;
+    #include <dithering_fragment>
+    `,
+        );
+
+      material.userData.shader = shader;
+    };
 
     const mesh = markRaw(new THREE.Mesh(geometry, material)) as BuildingMesh;
 

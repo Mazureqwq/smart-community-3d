@@ -37,24 +37,13 @@ const containerRef = ref<HTMLElement | null>(null);
 const {
   scene,
   camera,
-  controls,
   isReady,
   // config: sceneConfig, // 注意：这里的 sceneConfig 是 useScene 内部的，可能需要与 Store 同步或替换
   addToScene,
   focusOn,
-  applySceneConfig,
-  // toggleNightMode: sceneToggleNightMode,
-  // toggleGrid,
-  setViewMode,
 } = useScene(containerRef);
 
-const {
-  generateFromGeoJSON,
-  generateLabelData,
-  highlightBuilding,
-  getBuildingById,
-  updateOpacity,
-} = useBuilding();
+const { generateFromGeoJSON, generateLabelData } = useBuilding();
 
 const { createLabels, setVisibility } = useLabels();
 
@@ -63,33 +52,18 @@ async function initSceneContent(): Promise<void> {
   if (!scene.value) return;
 
   try {
-    // 使用 fetch 加载 GeoJSON
-    // const response = await fetch("/src/data/community.geojson");
-    // if (!response.ok) {
-    //   throw new Error(`HTTP error! status: ${response.status}`);
-    // }
-    // const communityData: GeoJSONData = await response.json();
     await sceneStore.filterDataSource();
     const communityData = sceneStore.getGeoJson;
     console.log("communityData", communityData);
     // 生成建筑 - 使用 Store 中的透明度
-    const buildingGroup = generateFromGeoJSON(
-      communityData!,
-      sceneStore.config.buildingOpacity,
-      0.5,
-    );
-    // const roadsGroup = generateRoadsFromGeoJSON(communityData!);
-    // const riversGroup = generateRiversFromGeoJSON(communityData!);
+    const buildingGroup = generateFromGeoJSON(communityData!, 1, 0.5);
 
     addToScene(buildingGroup);
-    // addToScene(roadsGroup);
-    // addToScene(riversGroup);
 
     // 生成标签
     const labelData = generateLabelData();
     const labelGroup = createLabels(labelData);
     addToScene(labelGroup);
-
     emit("scene-ready");
   } catch (error) {
     console.error("加载社区数据失败:", error);
@@ -166,13 +140,13 @@ function handleBuildingClick(event: MouseEvent): void {
     }
 
     if (obj.userData.isBuilding) {
+      console.log("obj.userData.isBuilding", obj);
       const buildingId = obj.userData.id;
-      highlightBuilding(buildingId);
 
       const box = new THREE.Box3().setFromObject(obj);
       const center = new THREE.Vector3();
       box.getCenter(center);
-      focusOn(center, 50);
+      focusOn(obj);
 
       emit("building-click", buildingId, obj.userData);
       break;
@@ -194,52 +168,21 @@ watch(
   },
 );
 
-watch(
-  () => [
-    sceneStore.config.ambientLightIntensity,
-    sceneStore.config.directionalLightIntensity,
-    sceneStore.config.showGrid,
-    sceneStore.config.isNightMode,
-  ],
-  () => {
-    applySceneConfig();
-  },
-);
-
-watch(
-  () => sceneStore.config.autoRotate,
-  (val) => {
-    if (controls.value) {
-      controls.value.autoRotate = val;
-    }
-  },
-);
-
-// 监听建筑透明度变化，重新生成建筑或更新材质
-watch(
-  () => sceneStore.config.buildingOpacity,
-  (opacity) => {
-    // 这里需要根据你的 useBuilding 实现来决定如何更新透明度
-    // 如果 generateFromGeoJSON 返回的组可以被缓存，则可以遍历更新材质
-    // 简单起见，这里假设需要重新生成或者有一个 updateBuildingOpacity 方法
-    // 由于原代码是在 initSceneContent 中生成的，且没有缓存 buildingGroup，
-    // 理想情况下应该在 useBuilding 中暴露一个 updateOpacity 方法
-    updateOpacity(opacity);
-    // TODO: 调用 useBuilding 中的方法更新现有建筑的透明度
-  },
-);
-
-watch(
-  () => sceneStore.config.view,
-  (val) => {
-    setViewMode(val);
-  },
-);
+// watch(
+//   () => [
+//     sceneStore.config.ambientLightIntensity,
+//     sceneStore.config.directionalLightIntensity,
+//     sceneStore.config.showGrid,
+//     sceneStore.config.isNightMode,
+//   ],
+//   () => {
+//     applySceneConfig();
+//   },
+// );
 
 // 绑定事件
 onMounted(() => {
   initSceneContent();
-
   if (containerRef.value) {
     containerRef.value.addEventListener("click", handleBuildingClick);
   }
@@ -248,8 +191,6 @@ onMounted(() => {
 // 暴露方法
 defineExpose({
   focusOn,
-  highlightBuilding,
-  getBuildingById,
 });
 </script>
 

@@ -162,3 +162,31 @@ export function buildNameMap(geojson: any) {
 
   return map;
 }
+export function computeGeoCenter(features: any[]): [number, number] {
+  let sumX = 0;
+  let sumY = 0;
+  let count = 0;
+
+  features.forEach((f) => {
+    if (f.geometry.type !== "Polygon") return;
+    const coords = f.geometry.coordinates[0];
+    coords.forEach(([lng, lat]) => {
+      sumX += lng;
+      sumY += lat;
+      count++;
+    });
+  });
+
+  return [sumX / count, sumY / count];
+}
+export function createProjector(center: [number, number], scale = 1) {
+  const EARTH_SCALE = 111000;
+
+  const cosLat = Math.cos((center[1] * Math.PI) / 180);
+
+  return (lng: number, lat: number): [number, number] => {
+    const x = (lng - center[0]) * EARTH_SCALE * cosLat * scale;
+    const y = (lat - center[1]) * EARTH_SCALE * scale;
+    return [x, y];
+  };
+}

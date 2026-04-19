@@ -22,7 +22,7 @@
     <!-- 建筑详情弹窗 -->
     <BuildingInfo
       class="scale left-top"
-      v-if="selectedBuilding"
+      v-if="selectedBuilding && selectedBuilding.name"
       :building="selectedBuilding"
       :iot-data="currentBuildingIoTData"
       @close="closeBuildingInfo" />

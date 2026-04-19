@@ -1,3 +1,5 @@
+import * as THREE from "three";
+
 // GeoJSON 类型定义
 export interface GeoJSONFeature {
   type: "Feature";
@@ -53,15 +55,10 @@ export interface LabelData {
 // 场景配置
 export interface SceneConfig {
   showLabels: boolean;
-  showGrid: boolean;
-  ambientLightIntensity: number;
-  directionalLightIntensity: number;
-  isNightMode: boolean;
-  buildingOpacity: number;
-  autoRotate: boolean;
-  view: "top" | "front" | "side" | "default";
   geojson: GeoJSONData | null;
   mapping: Record<string, string> | null;
+  isRoaming: boolean;
+  buildings: THREE.Object3D[];
 }
 
 // 相机状态

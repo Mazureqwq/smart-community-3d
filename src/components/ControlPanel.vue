@@ -10,100 +10,12 @@
           显示建筑标签
         </label>
       </div>
-
       <div class="control-item">
         <label>
-          <input type="checkbox" v-model="sceneStore.config.showGrid" />
-          显示网格
+          <input type="checkbox" v-model="sceneStore.config.isRoaming" />
+          漫游
         </label>
       </div>
-
-      <div class="control-item">
-        <label>
-          <input type="checkbox" v-model="sceneStore.config.autoRotate" />
-          自动旋转
-        </label>
-      </div>
-
-      <div class="control-item">
-        <div
-          :style="{
-            color: '#fff',
-          }"></div>
-        <label>
-          <input type="checkbox" v-model="sceneStore.config.isNightMode" />
-          🌙 夜景模式
-        </label>
-      </div>
-    </div>
-
-    <div class="control-group">
-      <h4>🎨 视觉效果</h4>
-
-      <div class="control-item slider-item">
-        <label>建筑透明度</label>
-        <input
-          type="range"
-          v-model.number="sceneStore.config.buildingOpacity"
-          min="0.3"
-          max="1"
-          step="0.05" />
-        <span class="slider-value"
-          >{{ (sceneStore.config.buildingOpacity * 100).toFixed(0) }}%</span
-        >
-      </div>
-
-      <div class="control-item slider-item">
-        <label>环境光强度</label>
-        <input
-          type="range"
-          v-model.number="sceneStore.config.ambientLightIntensity"
-          min="0.1"
-          max="1.5"
-          step="0.1" />
-        <span class="slider-value">{{
-          sceneStore.config.ambientLightIntensity.toFixed(1)
-        }}</span>
-      </div>
-      <div class="control-item slider-item">
-        <label>平行光强度</label>
-        <input
-          type="range"
-          v-model.number="sceneStore.config.directionalLightIntensity"
-          min="0.1"
-          max="1.5"
-          step="0.1" />
-        <span class="slider-value">{{
-          sceneStore.config.directionalLightIntensity.toFixed(1)
-        }}</span>
-      </div>
-    </div>
-
-    <div class="control-group">
-      <h4>📷 视角</h4>
-
-      <div class="view-buttons">
-        <button :class="isActive('top') && 'active'" @click="setView('top')">
-          顶视图
-        </button>
-        <button
-          :class="isActive('front') && 'active'"
-          @click="setView('front')">
-          前视图
-        </button>
-        <button :class="isActive('side') && 'active'" @click="setView('side')">
-          侧视图
-        </button>
-        <button
-          :class="isActive('default') && 'active'"
-          @click="setView('default')">
-          默认
-        </button>
-      </div>
-    </div>
-
-    <div class="control-footer">
-      <button class="reset-btn" @click="resetAll">重置所有</button>
     </div>
   </div>
 </template>
@@ -111,22 +23,7 @@
 <script setup lang="ts">
 import { useSceneStore } from "../stores/model/useSceneStore";
 
-const isActive = (view: string) => {
-  return sceneStore.config.view == view;
-};
-
 const sceneStore = useSceneStore();
-
-function setView(view: "default" | "top" | "front" | "side"): void {
-  // 这里可以 emit 事件给父组件，或者直接在 store 中处理视角逻辑
-  // 为了保持与原有逻辑一致，我们仍然 emit 事件，但不再处理 config 更新
-  emit("set-view", view);
-  sceneStore.config.view = view;
-}
-
-function resetAll(): void {
-  emit("reset");
-}
 
 const emit = defineEmits<{
   (e: "set-view", view: string): void;

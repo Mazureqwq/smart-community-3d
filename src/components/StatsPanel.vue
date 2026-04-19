@@ -165,7 +165,7 @@ onUnmounted(() => {
   position: absolute;
   bottom: 20px;
   left: 20px;
-  width: 360px;
+  /* width: 360px; */
   background: rgba(10, 20, 40, 0.9);
   backdrop-filter: blur(10px);
   border-radius: 16px;

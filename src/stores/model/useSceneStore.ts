@@ -10,15 +10,10 @@ export const useSceneStore = defineStore("scene", {
   } => ({
     config: {
       showLabels: false,
-      showGrid: false,
-      ambientLightIntensity: 0.6,
-      directionalLightIntensity: 0.6,
-      isNightMode: false,
-      buildingOpacity: 1,
-      autoRotate: false,
-      view: "default",
       geojson: null,
       mapping: null,
+      isRoaming: false,
+      buildings: [], // 存储所有建筑对象
     },
   }),
 
@@ -37,11 +32,6 @@ export const useSceneStore = defineStore("scene", {
       Object.assign(this.config, newConfig);
     },
 
-    // 设置自动旋转
-    setAutoRotate(value: boolean) {
-      this.config.autoRotate = value;
-    },
-
     // 筛选数据源（异步）
     async filterDataSource() {
       const response = await fetch("/src/data/desin.geojson");
@@ -58,14 +48,8 @@ export const useSceneStore = defineStore("scene", {
 
     // 重置为默认值
     reset() {
-      this.config.showLabels = true;
-      this.config.showGrid = true;
-      this.config.ambientLightIntensity = 0.6;
-      this.config.directionalLightIntensity = 1.2;
-      this.config.isNightMode = false;
-      this.config.buildingOpacity = 1;
-      this.config.autoRotate = true;
-      this.config.view = "default";
+      this.config.showLabels = false;
+      this.config.isRoaming = false;
     },
   },
 });

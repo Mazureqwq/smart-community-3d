@@ -16,6 +16,7 @@ import {
 import { useSceneStore } from "../stores";
 import { storeToRefs } from "pinia";
 import { createMapEngineControls } from "../utils/MapControls";
+import { createRoamingController } from "../utils/roamingController";
 
 export function useScene(containerRef: Ref<HTMLElement | null>) {
   // ===== 核心对象 =====
@@ -36,6 +37,16 @@ export function useScene(containerRef: Ref<HTMLElement | null>) {
   let animationId: number | null = null;
   let lastTime = 0;
   let frameCount = 0;
+
+  let focusTarget: THREE.Vector3 | null = null;
+
+  let startTarget = new THREE.Vector3();
+  let startDistance = 0;
+  let endDistance = 0;
+
+  let roaming: ReturnType<typeof createRoamingController> | null = null;
+
+  let focusT = 0; // 0~1
 
   // ✅ 地图范围（关键）
   let mapBounds: THREE.Box3 | null = null;
@@ -93,21 +104,25 @@ export function useScene(containerRef: Ref<HTMLElement | null>) {
     initLights();
     addGround();
     isReady.value = true;
+
+    roaming = createRoamingController({
+      getCamera: () => camera.value,
+      getControls: () => mapEngine?.controls,
+      getBuildings: () => config.value.buildings,
+    });
+
+    roaming.bindUserControlBreak();
   }
 
   // ===== 光照 =====
   function initLights(): void {
     if (!scene.value) return;
 
-    const ambient = markRaw(
-      createAmbientLight(0x404060, config.value.ambientLightIntensity),
-    );
+    const ambient = markRaw(createAmbientLight(0x404060, 1));
     scene.value.add(ambient);
     ambientLight.value = ambient;
 
-    const directional = markRaw(
-      createDirectionalLight(0xfff5d1, config.value.directionalLightIntensity),
-    );
+    const directional = markRaw(createDirectionalLight(0xfff5d1, 1));
     scene.value.add(directional);
     directionalLight.value = directional;
 
@@ -151,11 +166,42 @@ export function useScene(containerRef: Ref<HTMLElement | null>) {
       // ✅ 自动识别地图 boundingBox
       if (obj.userData?.boundingBox) {
         mapBounds = obj.userData.boundingBox;
-
         const center = new THREE.Vector3();
         mapBounds.getCenter(center);
       }
+
+      // ✅ 收集建筑对象
+      if (obj.userData?.type === "building" || obj.name.includes("building")) {
+        // buildings.value.push(obj);
+        config.value.buildings = [...config.value.buildings, obj];
+      }
     });
+  }
+  function focusOn(targetObj: THREE.Object3D) {
+    if (!camera.value || !mapEngine) return;
+
+    const cam = camera.value;
+    const controls = mapEngine.controls;
+
+    const center = new THREE.Vector3();
+    new THREE.Box3().setFromObject(targetObj).getCenter(center);
+
+    // ⭐ 当前状态
+    startTarget.copy(controls.target);
+    startDistance = cam.position.distanceTo(controls.target);
+
+    // ⭐ 目标距离（根据包围盒算一个更近的距离）
+    const size = new THREE.Vector3();
+    new THREE.Box3().setFromObject(targetObj).getSize(size);
+    const maxDim = Math.max(size.x, size.y, size.z);
+
+    const fov = (cam.fov * Math.PI) / 180;
+    const fitDist = maxDim / (2 * Math.tan(fov / 2));
+
+    endDistance = Math.max(fitDist * 1.2, 30); // 下限避免贴脸
+
+    focusTarget = center;
+    focusT = 0;
   }
 
   // ===== 动画 =====
@@ -164,9 +210,59 @@ export function useScene(containerRef: Ref<HTMLElement | null>) {
 
     animationId = requestAnimationFrame(animate);
 
+    const time = performance.now();
+    scene.value?.traverse((obj: any) => {
+      if (obj.isMesh && obj.material?.userData?.shader) {
+        obj.material.userData.shader.uniforms.u_time.value += 0.02;
+      }
+    });
+
+    if (focusTarget && camera.value && mapEngine) {
+      const cam = camera.value;
+      const controls = mapEngine.controls;
+
+      // ⭐ 进度
+      focusT += 0.04; // 控制速度（0.02慢，0.06快）
+      let t = focusT;
+
+      if (t >= 1) {
+        t = 1;
+      }
+
+      // ⭐ easeInOut
+      const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+      // ===== 1. 插值 target（转视角）
+      controls.target.lerpVectors(startTarget, focusTarget, ease);
+
+      // ===== 2. 插值距离（拉近）
+      const dist = THREE.MathUtils.lerp(startDistance, endDistance, ease);
+
+      // 当前方向（从 target 指向相机）
+      const dir = new THREE.Vector3()
+        .subVectors(cam.position, controls.target)
+        .normalize();
+
+      // 重新计算相机位置（围绕 target 收缩）
+      cam.position.copy(controls.target.clone().add(dir.multiplyScalar(dist)));
+
+      if (t === 1) {
+        focusTarget = null;
+      }
+    }
+    roaming?.update(0, !!focusTarget);
+
     mapEngine?.update();
     renderer.value.render(scene.value, camera.value);
     labelRenderer.value?.render(scene.value, camera.value);
+
+    // 更新 FPS
+    frameCount++;
+    if (time - lastTime >= 1000) {
+      fps.value = frameCount;
+      frameCount = 0;
+      lastTime = time;
+    }
   }
 
   // ===== ✅ 地图范围限制（核心）=====
@@ -191,15 +287,6 @@ export function useScene(containerRef: Ref<HTMLElement | null>) {
 
     const offset = cam.position.clone().sub(target);
     cam.position.copy(target.clone().add(offset));
-  }
-
-  // ===== FPS =====
-  frameCount++;
-  const now = performance.now();
-  if (now - lastTime >= 1000) {
-    fps.value = frameCount;
-    frameCount = 0;
-    lastTime = now;
   }
 
   function startAnimation() {
@@ -256,5 +343,6 @@ export function useScene(containerRef: Ref<HTMLElement | null>) {
     isReady,
     fps,
     addToScene,
+    focusOn,
   };
 }

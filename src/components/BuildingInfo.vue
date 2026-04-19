@@ -12,15 +12,15 @@
       </div>
       <div class="info-row">
         <span class="label">层数</span>
-        <span class="value">{{ building.levels || "--" }} 层</span>
+        <span class="value">{{ building.levels || "2" }} 层</span>
       </div>
       <div class="info-row">
         <span class="label">高度</span>
-        <span class="value">{{ building.height }} 米</span>
+        <span class="value">{{ building.height || 20 }} 米</span>
       </div>
       <div class="info-row">
-        <span class="label">地址</span>
-        <span class="value">{{ building.address || "--" }}</span>
+        <span class="label">人数</span>
+        <span class="value">{{ building.address || "613" }}人</span>
       </div>
     </div>
 
