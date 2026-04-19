@@ -4,6 +4,7 @@
     <!-- 3D画布 -->
     <SceneCanvas
       ref="sceneCanvasRef"
+      :selected-id="selectedBuildingId"
       @building-click="handleBuildingClick"
       @scene-ready="handleSceneReady" />
 
@@ -58,7 +59,7 @@ import type { BuildingProperties, BuildingIoTData } from "./types/community";
 
 // 初始化 Store
 const sceneStore = useSceneStore();
-
+sceneStore.filterDataSource();
 // 组件引用
 const sceneCanvasRef = ref<InstanceType<typeof SceneCanvas> | null>(null);
 
@@ -87,6 +88,8 @@ function handleBuildingClick(
 // 处理选择建筑
 function handleSelectBuilding(buildingId: string): void {
   selectedBuildingId.value = buildingId;
+  console.log("Building clicked:", buildingId);
+
   // 通过场景组件高亮
   sceneCanvasRef.value?.highlightBuilding(buildingId);
 }

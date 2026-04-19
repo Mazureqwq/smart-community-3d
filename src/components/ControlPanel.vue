@@ -29,9 +29,7 @@
         <div
           :style="{
             color: '#fff',
-          }">
-          {{ sceneStore.config }}
-        </div>
+          }"></div>
         <label>
           <input type="checkbox" v-model="sceneStore.config.isNightMode" />
           🌙 夜景模式
@@ -67,6 +65,18 @@
           sceneStore.config.ambientLightIntensity.toFixed(1)
         }}</span>
       </div>
+      <div class="control-item slider-item">
+        <label>平行光强度</label>
+        <input
+          type="range"
+          v-model.number="sceneStore.config.directionalLightIntensity"
+          min="0.1"
+          max="1.5"
+          step="0.1" />
+        <span class="slider-value">{{
+          sceneStore.config.directionalLightIntensity.toFixed(1)
+        }}</span>
+      </div>
     </div>
 
     <div class="control-group">
@@ -99,7 +109,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
 import { useSceneStore } from "../stores/model/useSceneStore";
 
 const isActive = (view: string) => {

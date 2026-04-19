@@ -3,11 +3,13 @@ import * as THREE from "three";
 import { CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer";
 import type { LabelData } from "../types/community";
 import { createCSS2DLabel } from "../utils/threeHelpers";
+import { useSceneStore } from "../stores";
 
 export function useLabels() {
+  const sceneStore = useSceneStore();
   const labels = shallowRef<CSS2DObject[]>([]);
   const labelGroup = shallowRef<THREE.Group | null>(null);
-  const visible = ref(true);
+  const visible = ref(sceneStore.config.showLabels);
 
   /**
    * 创建标签组
@@ -17,23 +19,30 @@ export function useLabels() {
 
     const labelList: CSS2DObject[] = [];
 
-    labelData.forEach((data) => {
-      const element = createCSS2DLabel(
-        data.text,
-        data.color || "#ffffff",
-        `${data.fontSize || 14}px`,
-      );
+    labelData
+      .filter((i) => i.text) //没有名字的不创建标签
+      .forEach((data) => {
+        const element = createCSS2DLabel(
+          data.text,
+          data.color || "#ffffff",
+          `${data.fontSize || 14}px`,
+        );
 
-      const label = markRaw(new CSS2DObject(element));
-      label.position.set(data.position[0], data.position[1], data.position[2]);
-      label.userData = {
-        type: "building-label",
-        buildingId: data.buildingId,
-      };
+        const label = markRaw(new CSS2DObject(element));
+        label.position.set(
+          data.position[0],
+          data.position[1],
+          data.position[2],
+        );
+        label.userData = {
+          type: "building-label",
+          buildingId: data.buildingId,
+        };
+        label.visible = visible.value;
 
-      labelList.push(label);
-      group.add(label);
-    });
+        labelList.push(label);
+        group.add(label);
+      });
 
     labels.value = labelList;
     labelGroup.value = group;

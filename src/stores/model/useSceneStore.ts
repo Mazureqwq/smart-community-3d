@@ -1,53 +1,72 @@
 // src/stores/useSceneStore.ts
 import { defineStore } from "pinia";
-import { ref, reactive } from "vue";
 import type { SceneConfig } from "../../types/community";
+import { normalizeFeature, buildNameMap } from "../../utils/threeHelpers";
 
-export const useSceneStore = defineStore("scene", () => {
-  // 场景配置状态
-  const config = reactive<SceneConfig>({
-    showLabels: true,
-    showGrid: true,
-    showAxes: false,
-    ambientLightIntensity: 0.0,
-    directionalLightIntensity: 0.0,
-    isNightMode: false,
-    buildingOpacity: 1,
-    autoRotate: true,
-    view: "default",
-  });
+export const useSceneStore = defineStore("scene", {
+  // 1. 状态（必须是函数，返回对象）
+  state: (): {
+    config: SceneConfig;
+  } => ({
+    config: {
+      showLabels: false,
+      showGrid: false,
+      ambientLightIntensity: 0.6,
+      directionalLightIntensity: 0.6,
+      isNightMode: false,
+      buildingOpacity: 1,
+      autoRotate: false,
+      view: "default",
+      geojson: null,
+      mapping: null,
+    },
+  }),
 
-  // Actions
-  function updateConfig(newConfig: Partial<SceneConfig>) {
-    Object.assign(config, newConfig);
-  }
+  getters: {
+    getGeoJson(): SceneConfig["geojson"] {
+      return this.config.geojson;
+    },
+    getMapping(): SceneConfig["mapping"] {
+      return this.config.mapping;
+    },
+  },
 
-  function toggleAutoRotate() {
-    config.autoRotate = !config.autoRotate;
-  }
+  actions: {
+    // 更新配置
+    updateConfig(newConfig: Partial<SceneConfig>) {
+      Object.assign(this.config, newConfig);
+    },
 
-  function setAutoRotate(value: boolean) {
-    config.autoRotate = value;
-  }
+    // 设置自动旋转
+    setAutoRotate(value: boolean) {
+      this.config.autoRotate = value;
+    },
 
-  function reset() {
+    // 筛选数据源（异步）
+    async filterDataSource() {
+      const response = await fetch("/src/data/desin.geojson");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const communityData = await response.json();
+      communityData.features = communityData.features.map(normalizeFeature);
+
+      const mapping = buildNameMap(communityData);
+      this.config.geojson = communityData;
+      this.config.mapping = mapping;
+    },
+
     // 重置为默认值
-    config.showLabels = true;
-    config.showGrid = true;
-    config.showAxes = false;
-    config.ambientLightIntensity = 0.6;
-    config.directionalLightIntensity = 1.2;
-    config.isNightMode = false;
-    config.buildingOpacity = 1;
-    config.autoRotate = true;
-    config.view = "default";
-  }
-
-  return {
-    config,
-    updateConfig,
-    toggleAutoRotate,
-    setAutoRotate,
-    reset,
-  };
+    reset() {
+      this.config.showLabels = true;
+      this.config.showGrid = true;
+      this.config.ambientLightIntensity = 0.6;
+      this.config.directionalLightIntensity = 1.2;
+      this.config.isNightMode = false;
+      this.config.buildingOpacity = 1;
+      this.config.autoRotate = true;
+      this.config.view = "default";
+    },
+  },
 });
+export default useSceneStore;

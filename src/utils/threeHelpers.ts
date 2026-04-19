@@ -99,12 +99,13 @@ export function createCSS2DLabel(
  * 创建建筑材质
  */
 export function createBuildingMaterial(
-  color: string,
   opacity: number = 1,
   emissive: string = "#111111",
 ): THREE.MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({
-    color: color,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
     emissive: new THREE.Color(emissive),
     roughness: 0.5,
     metalness: 0.1,
@@ -124,4 +125,40 @@ export function computeBoundingBox(meshes: THREE.Mesh[]): THREE.Box3 {
     box.expandByObject(mesh);
   });
   return box;
+}
+
+/**
+ * 处理geojson数据
+ */
+export function normalizeFeature(feature: any) {
+  const p = feature.properties || {};
+
+  const height =
+    parseFloat(p.height) || (parseFloat(p["building:levels"]) || 10) * 3;
+
+  return {
+    ...feature,
+    properties: {
+      ...p,
+      height,
+      levels: p["building:levels"] || null,
+    },
+  };
+}
+/**
+ * 生成映射
+ */
+export function buildNameMap(geojson: any) {
+  const map = {};
+
+  for (const feature of geojson.features) {
+    const id = feature.id;
+    const name = feature.properties?.name;
+
+    if (!id || !name) continue;
+
+    map[id] = name;
+  }
+
+  return map;
 }

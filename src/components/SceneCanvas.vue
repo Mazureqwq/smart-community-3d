@@ -15,7 +15,17 @@ import { useScene } from "../composables/useScene";
 import { useBuilding } from "../composables/useBuilding";
 import { useLabels } from "../composables/useLabels";
 import { useSceneStore } from "../stores/model/useSceneStore"; // 引入 Store
-import type { GeoJSONData } from "../types/community";
+
+const props = defineProps({
+  selectedBuildingId: {
+    type: String,
+  },
+});
+
+watch(
+  () => props.selectedBuildingId,
+  (val) => {},
+);
 
 // Store
 const sceneStore = useSceneStore();
@@ -29,10 +39,13 @@ const {
   camera,
   controls,
   isReady,
-  config: sceneConfig, // 注意：这里的 sceneConfig 是 useScene 内部的，可能需要与 Store 同步或替换
+  // config: sceneConfig, // 注意：这里的 sceneConfig 是 useScene 内部的，可能需要与 Store 同步或替换
   addToScene,
   focusOn,
-  toggleNightMode: sceneToggleNightMode,
+  applySceneConfig,
+  // toggleNightMode: sceneToggleNightMode,
+  // toggleGrid,
+  setViewMode,
 } = useScene(containerRef);
 
 const {
@@ -40,6 +53,7 @@ const {
   generateLabelData,
   highlightBuilding,
   getBuildingById,
+  updateOpacity,
 } = useBuilding();
 
 const { createLabels, setVisibility } = useLabels();
@@ -50,50 +64,36 @@ async function initSceneContent(): Promise<void> {
 
   try {
     // 使用 fetch 加载 GeoJSON
-    const response = await fetch("/src/data/community.geojson");
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const communityData: GeoJSONData = await response.json();
-
+    // const response = await fetch("/src/data/community.geojson");
+    // if (!response.ok) {
+    //   throw new Error(`HTTP error! status: ${response.status}`);
+    // }
+    // const communityData: GeoJSONData = await response.json();
+    await sceneStore.filterDataSource();
+    const communityData = sceneStore.getGeoJson;
+    console.log("communityData", communityData);
     // 生成建筑 - 使用 Store 中的透明度
     const buildingGroup = generateFromGeoJSON(
-      communityData,
+      communityData!,
       sceneStore.config.buildingOpacity,
+      0.5,
     );
+    // const roadsGroup = generateRoadsFromGeoJSON(communityData!);
+    // const riversGroup = generateRiversFromGeoJSON(communityData!);
+
     addToScene(buildingGroup);
+    // addToScene(roadsGroup);
+    // addToScene(riversGroup);
 
     // 生成标签
     const labelData = generateLabelData();
     const labelGroup = createLabels(labelData);
     addToScene(labelGroup);
 
-    // 添加地面
-    addGround();
-
-    // 添加环境装饰
-    addDecorations();
-
     emit("scene-ready");
   } catch (error) {
     console.error("加载社区数据失败:", error);
   }
-}
-
-// 添加地面
-function addGround(): void {
-  const groundGeometry = new THREE.CircleGeometry(200, 32);
-  const groundMaterial = new THREE.MeshStandardMaterial({
-    color: 0x1a2a3a,
-    roughness: 0.8,
-    metalness: 0.1,
-    side: THREE.DoubleSide,
-  });
-  const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -0.05;
-  ground.receiveShadow = true;
-  addToScene(ground);
 }
 
 // 添加装饰元素
@@ -158,7 +158,7 @@ function handleBuildingClick(event: MouseEvent): void {
   raycaster.setFromCamera(mouse, camera.value);
 
   const intersects = raycaster.intersectObjects(scene.value.children, true);
-
+  // console.log("intersects", intersects);
   for (const intersect of intersects) {
     let obj = intersect.object;
     while (obj.parent && !obj.userData.isBuilding) {
@@ -195,9 +195,14 @@ watch(
 );
 
 watch(
-  () => sceneStore.config.isNightMode,
+  () => [
+    sceneStore.config.ambientLightIntensity,
+    sceneStore.config.directionalLightIntensity,
+    sceneStore.config.showGrid,
+    sceneStore.config.isNightMode,
+  ],
   () => {
-    sceneToggleNightMode();
+    applySceneConfig();
   },
 );
 
@@ -219,8 +224,15 @@ watch(
     // 简单起见，这里假设需要重新生成或者有一个 updateBuildingOpacity 方法
     // 由于原代码是在 initSceneContent 中生成的，且没有缓存 buildingGroup，
     // 理想情况下应该在 useBuilding 中暴露一个 updateOpacity 方法
-    console.log("Opacity changed to:", opacity);
+    updateOpacity(opacity);
     // TODO: 调用 useBuilding 中的方法更新现有建筑的透明度
+  },
+);
+
+watch(
+  () => sceneStore.config.view,
+  (val) => {
+    setViewMode(val);
   },
 );
 

@@ -54,13 +54,14 @@ export interface LabelData {
 export interface SceneConfig {
   showLabels: boolean;
   showGrid: boolean;
-  showAxes: boolean;
   ambientLightIntensity: number;
   directionalLightIntensity: number;
   isNightMode: boolean;
   buildingOpacity: number;
   autoRotate: boolean;
   view: "top" | "front" | "side" | "default";
+  geojson: GeoJSONData | null;
+  mapping: Record<string, string> | null;
 }
 
 // 相机状态

@@ -61,7 +61,6 @@
         </div>
       </div>
     </div>
-
     <!-- 建筑列表 -->
     <div class="building-list">
       <div class="list-header">建筑详情</div>
@@ -91,6 +90,7 @@ import {
   type CommunityStats,
 } from "../data/mockData";
 import type { BuildingIoTData } from "../types/community";
+import { useSceneStore } from "../stores";
 
 const props = defineProps<{
   selectedId?: string | null;
@@ -105,6 +105,7 @@ const emit = defineEmits<{
 const iotData = ref<BuildingIoTData[]>([]);
 const updateTime = ref("");
 const trend = ref({ power: 2.5, water: -1.2 });
+const sceneStore = useSceneStore();
 
 // 计算统计数据
 const stats = computed<CommunityStats>(() => calculateStats(iotData.value));
@@ -122,15 +123,19 @@ const avgTemperature = computed(() => {
 });
 
 // 建筑名称映射
-const buildingNames: Record<string, string> = {
-  "bld-001": "1号楼 · 云栖阁",
-  "bld-002": "2号楼 · 揽月轩",
-  "bld-003": "商业中心",
-  "bld-004": "服务中心",
-};
+const buildingNames = computed(() => sceneStore.getMapping);
+
+// const buildingNames = computed(() => {
+//   const names: Record<string, string> = {};
+//   console.log("buildingData", buildingData);
+//   buildingData.value.forEach((b) => {
+//     names[b.buildingId] = b.name;
+//   });
+//   return names;
+// });
 
 function getBuildingName(id: string): string {
-  return buildingNames[id] || id;
+  return buildingNames.value?.[id] || id;
 }
 
 function formatNumber(num: number): string {
