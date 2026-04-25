@@ -40,7 +40,6 @@ const {
   isReady,
   // config: sceneConfig, // 注意：这里的 sceneConfig 是 useScene 内部的，可能需要与 Store 同步或替换
   addToScene,
-  focusOn,
 } = useScene(containerRef);
 
 const { generateFromGeoJSON, generateLabelData } = useBuilding();
@@ -140,13 +139,11 @@ function handleBuildingClick(event: MouseEvent): void {
     }
 
     if (obj.userData.isBuilding) {
-      console.log("obj.userData.isBuilding", obj);
       const buildingId = obj.userData.id;
 
       const box = new THREE.Box3().setFromObject(obj);
       const center = new THREE.Vector3();
       box.getCenter(center);
-      focusOn(obj);
 
       emit("building-click", buildingId, obj.userData);
       break;
@@ -189,9 +186,9 @@ onMounted(() => {
 });
 
 // 暴露方法
-defineExpose({
-  focusOn,
-});
+// defineExpose({
+//   focusOn,
+// });
 </script>
 
 <style scoped>

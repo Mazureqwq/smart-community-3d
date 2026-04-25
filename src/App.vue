@@ -10,28 +10,18 @@
 
     <!-- 数据面板 -->
     <StatsPanel
-      class="scale left-bottom"
+      class="scale left-bottom z-999"
       :selected-id="selectedBuildingId"
       @select-building="handleSelectBuilding"
       @data-update="handleDataUpdate" />
 
     <!-- 控制面板 -->
-    <!-- 注意：不再需要传递 config 和 autoRotate 作为 props，也不监听 update 事件，因为 ControlPanel 将直接操作 Store -->
-    <ControlPanel class="scale right-top" @reset="handleReset" />
-
-    <!-- 建筑详情弹窗 -->
-    <BuildingInfo
-      class="scale left-top"
-      v-if="selectedBuilding && selectedBuilding.name"
-      :building="selectedBuilding"
-      :iot-data="currentBuildingIoTData"
-      @close="closeBuildingInfo" />
+    <ControlPanel class="scale right-top z-999" @reset="handleReset" />
 
     <!-- 顶部状态栏 -->
     <div class="top-bar">
       <div class="app-title scale left">
-        <span class="title-icon">🏘️</span>
-        <span>智慧社区 3D 可视化平台</span>
+        <span class="card5-text">智慧园区 3D 可视化平台</span>
       </div>
       <div class="status-info scale right">
         <span class="status-item">🟢 在线</span>
@@ -41,8 +31,8 @@
     </div>
 
     <!-- 操作提示 -->
-    <div class="hint scale bottom">
-      <span>🖱️ 鼠标拖动旋转 | 滚轮缩放 | 右键平移</span>
+    <div class="hint scale bottom z-9999999999999">
+      <span>🖱️ 鼠标拖动旋转 | 滚轮缩放 | 左键平移</span>
       <span>👆 点击建筑查看详情</span>
     </div>
   </div>
@@ -54,7 +44,7 @@ import { useSceneStore } from "./stores/model/useSceneStore"; // 引入 Store
 import SceneCanvas from "./components/SceneCanvas.vue";
 import StatsPanel from "./components/StatsPanel.vue";
 import ControlPanel from "./components/ControlPanel.vue";
-import BuildingInfo from "./components/BuildingInfo.vue";
+// import BuildingInfo from "./components/BuildingInfo.vue";
 import type { BuildingProperties, BuildingIoTData } from "./types/community";
 
 // 初始化 Store
@@ -91,7 +81,7 @@ function handleSelectBuilding(buildingId: string): void {
   console.log("Building clicked:", buildingId);
 
   // 通过场景组件高亮
-  sceneCanvasRef.value?.highlightBuilding(buildingId);
+  // sceneCanvasRef.value?.highlightBuilding(buildingId);
 }
 
 // 关闭建筑信息
@@ -137,27 +127,6 @@ provide("sceneStore", sceneStore);
   height: 100vh;
   position: relative;
   overflow: hidden;
-}
-.scale {
-  transform: scale(var(--scale));
-}
-.bottom {
-  transform-origin: center bottom;
-}
-.left {
-  transform-origin: left;
-}
-.right {
-  transform-origin: right;
-}
-.left-bottom {
-  transform-origin: left bottom;
-}
-.left-top {
-  transform-origin: left top;
-}
-.right-top {
-  transform-origin: right top;
 }
 
 .top-bar {
@@ -221,5 +190,28 @@ provide("sceneStore", sceneStore);
   z-index: 50;
   display: flex;
   gap: 20px;
+}
+.card-5 {
+  position: relative;
+  background: rgba(10, 20, 40, 0.85);
+  border-radius: 12px;
+  padding: 20px;
+  overflow: hidden;
+}
+.card-5::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #1890ff33, transparent);
+}
+.card5-text {
+  position: relative;
+  z-index: 2;
+  font-size: 30px;
+  color: #fff;
+  font-weight: bold;
 }
 </style>

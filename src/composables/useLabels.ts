@@ -39,7 +39,9 @@ export function useLabels() {
           buildingId: data.buildingId,
         };
         label.visible = visible.value;
-
+        const el = label.element as HTMLElement;
+        el.style.pointerEvents = "none"; // 不阻挡UI点击
+        el.style.zIndex = "1"; // 比UI低
         labelList.push(label);
         group.add(label);
       });

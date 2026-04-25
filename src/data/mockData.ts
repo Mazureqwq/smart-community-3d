@@ -6,7 +6,7 @@ export function generateIoTData(): BuildingIoTData[] {
 
   return [
     {
-      buildingId: "bld-001",
+      buildingId: "way/404362685",
       powerUsage: 2840 + Math.random() * 200,
       waterUsage: 156 + Math.random() * 20,
       temperature: 22 + Math.random() * 3,
@@ -16,7 +16,7 @@ export function generateIoTData(): BuildingIoTData[] {
       lastUpdate: now,
     },
     {
-      buildingId: "bld-002",
+      buildingId: "way/405016993",
       powerUsage: 3650 + Math.random() * 300,
       waterUsage: 198 + Math.random() * 25,
       temperature: 21.5 + Math.random() * 3,
@@ -26,7 +26,7 @@ export function generateIoTData(): BuildingIoTData[] {
       lastUpdate: now,
     },
     {
-      buildingId: "bld-003",
+      buildingId: "way/483555684",
       powerUsage: 8900 + Math.random() * 500,
       waterUsage: 420 + Math.random() * 50,
       temperature: 23 + Math.random() * 2,
@@ -36,7 +36,7 @@ export function generateIoTData(): BuildingIoTData[] {
       lastUpdate: now,
     },
     {
-      buildingId: "bld-004",
+      buildingId: "way/487101884",
       powerUsage: 1250 + Math.random() * 100,
       waterUsage: 78 + Math.random() * 10,
       temperature: 22.5 + Math.random() * 2,

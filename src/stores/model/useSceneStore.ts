@@ -9,10 +9,10 @@ export const useSceneStore = defineStore("scene", {
     config: SceneConfig;
   } => ({
     config: {
-      showLabels: false,
+      showLabels: true,
       geojson: null,
       mapping: null,
-      isRoaming: false,
+      isRoaming: true,
       buildings: [], // 存储所有建筑对象
     },
   }),

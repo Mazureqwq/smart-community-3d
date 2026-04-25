@@ -32,8 +32,9 @@ export function createRoamingController(options: RoamingOptions) {
   const orbitCenter = new THREE.Vector3();
 
   let angle = 0;
-  const ORBIT_RADIUS = 300;
-  const ORBIT_SPEED = 0.001;
+  const ORBIT_RADIUS = 350;
+  const HEIGHT = 200;
+  const ORBIT_SPEED = 0.0007;
 
   let raiseT = 0;
 
@@ -76,7 +77,7 @@ export function createRoamingController(options: RoamingOptions) {
     unionBox.getCenter(center);
 
     orbitCenter.copy(center);
-    orbitCenter.y += ORBIT_RADIUS;
+    orbitCenter.y += HEIGHT;
 
     console.log("[Roaming] center:", center);
 

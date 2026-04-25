@@ -2,6 +2,7 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import "./style.css";
 import { setupStore } from "./stores";
+import "virtual:uno.css";
 
 function setScale() {
   const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);

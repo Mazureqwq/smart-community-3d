@@ -52,3 +52,57 @@ body {
   background: rgba(0, 242, 255, 0.3);
   color: #fff;
 }
+
+.scale {
+  transform: scale(var(--scale));
+  z-index: 10;
+  position: relative;
+}
+.bottom {
+  transform-origin: center bottom;
+}
+.left {
+  transform-origin: left;
+}
+.right {
+  transform-origin: right;
+}
+.left-bottom {
+  transform-origin: left bottom;
+}
+.left-top {
+  transform-origin: left top;
+}
+.right-top {
+  transform-origin: right top;
+}
+
+/* 进入 */
+.fade-enter {
+  opacity: 0;
+  transform: translate(30px, -50%) scale(0.95);
+}
+
+.fade-enter-active {
+  transition: all 0.25s ease;
+}
+
+.fade-enter-to {
+  opacity: 1;
+  transform: translate(20px, -50%) scale(1);
+}
+
+/* 离开 */
+.fade-leave {
+  opacity: 1;
+  transform: translate(20px, -50%) scale(1);
+}
+
+.fade-leave-active {
+  transition: all 0.25s ease;
+}
+
+.fade-leave-to {
+  opacity: 0;
+  transform: translate(40px, -50%) scale(0.9);
+}

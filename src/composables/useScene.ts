@@ -17,6 +17,7 @@ import { useSceneStore } from "../stores";
 import { storeToRefs } from "pinia";
 import { createMapEngineControls } from "../utils/MapControls";
 import { createRoamingController } from "../utils/roamingController";
+import { createInteractionController } from "../utils/interactionController";
 
 export function useScene(containerRef: Ref<HTMLElement | null>) {
   // ===== 核心对象 =====
@@ -50,6 +51,8 @@ export function useScene(containerRef: Ref<HTMLElement | null>) {
 
   // ✅ 地图范围（关键）
   let mapBounds: THREE.Box3 | null = null;
+
+  let interaction: ReturnType<typeof createInteractionController> | null = null;
 
   // ===== 初始化 =====
   function initScene(): void {
@@ -177,32 +180,32 @@ export function useScene(containerRef: Ref<HTMLElement | null>) {
       }
     });
   }
-  function focusOn(targetObj: THREE.Object3D) {
-    if (!camera.value || !mapEngine) return;
+  // function focusOn(targetObj: THREE.Object3D) {
+  //   if (!camera.value || !mapEngine) return;
 
-    const cam = camera.value;
-    const controls = mapEngine.controls;
+  //   const cam = camera.value;
+  //   const controls = mapEngine.controls;
 
-    const center = new THREE.Vector3();
-    new THREE.Box3().setFromObject(targetObj).getCenter(center);
+  //   const center = new THREE.Vector3();
+  //   new THREE.Box3().setFromObject(targetObj).getCenter(center);
 
-    // ⭐ 当前状态
-    startTarget.copy(controls.target);
-    startDistance = cam.position.distanceTo(controls.target);
+  //   // ⭐ 当前状态
+  //   startTarget.copy(controls.target);
+  //   startDistance = cam.position.distanceTo(controls.target);
 
-    // ⭐ 目标距离（根据包围盒算一个更近的距离）
-    const size = new THREE.Vector3();
-    new THREE.Box3().setFromObject(targetObj).getSize(size);
-    const maxDim = Math.max(size.x, size.y, size.z);
+  //   // ⭐ 目标距离（根据包围盒算一个更近的距离）
+  //   const size = new THREE.Vector3();
+  //   new THREE.Box3().setFromObject(targetObj).getSize(size);
+  //   const maxDim = Math.max(size.x, size.y, size.z);
 
-    const fov = (cam.fov * Math.PI) / 180;
-    const fitDist = maxDim / (2 * Math.tan(fov / 2));
+  //   const fov = (cam.fov * Math.PI) / 180;
+  //   const fitDist = maxDim / (2 * Math.tan(fov / 2));
 
-    endDistance = Math.max(fitDist * 1.2, 30); // 下限避免贴脸
+  //   endDistance = Math.max(fitDist * 1.2, 30); // 下限避免贴脸
 
-    focusTarget = center;
-    focusT = 0;
-  }
+  //   focusTarget = center;
+  //   focusT = 0;
+  // }
 
   // ===== 动画 =====
   function animate(): void {
@@ -255,6 +258,8 @@ export function useScene(containerRef: Ref<HTMLElement | null>) {
     mapEngine?.update();
     renderer.value.render(scene.value, camera.value);
     labelRenderer.value?.render(scene.value, camera.value);
+
+    interaction?.update(0.016);
 
     // 更新 FPS
     frameCount++;
@@ -326,6 +331,16 @@ export function useScene(containerRef: Ref<HTMLElement | null>) {
 
   onMounted(() => {
     initScene();
+
+    interaction = createInteractionController({
+      getScene: () => scene.value,
+      getCamera: () => camera.value,
+      getRendererDom: () => renderer.value?.domElement,
+      getControls: () => mapEngine?.controls,
+      getBuildings: () => config.value.buildings,
+    });
+
+    interaction.bind();
     startAnimation();
     window.addEventListener("resize", handleResize);
   });
@@ -343,6 +358,6 @@ export function useScene(containerRef: Ref<HTMLElement | null>) {
     isReady,
     fps,
     addToScene,
-    focusOn,
+    // focusOn,
   };
 }
