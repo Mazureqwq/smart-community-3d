@@ -1,5 +1,5 @@
 <template>
-  <div class="scale left tech-panel z-999">
+  <div class="scale left tech-panel">
     <div class="panel">
       <!-- ===== 上：核心信息 ===== -->
       <div class="header">
@@ -313,17 +313,17 @@ const liquidOptions2 = ref({
           colorStops: [
             {
               offset: 0,
-              color: usageColor(0.78)[1],
+              color: usageColor(0.42)[1],
             },
             {
               offset: 1,
-              color: usageColor(0.78)[0],
+              color: usageColor(0.42)[0],
             },
           ],
           globalCoord: false,
         },
       ],
-      data: [0.78, 0.78], // data个数代表波浪数
+      data: [0.42, 0.42], // data个数代表波浪数
       backgroundStyle: {
         borderWidth: 1,
         color: "rgba(117, 205, 255, 0.25)",

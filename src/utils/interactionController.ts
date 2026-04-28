@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer";
 import { createApp } from "vue";
 import BuildingPanel from "../components/BuildingPanel.vue";
+import { useSceneStore } from "../stores";
+import { storeToRefs } from "pinia";
 
 type Options = {
   getScene: () => THREE.Scene | null;
@@ -36,6 +38,8 @@ export function createInteractionController(opt: Options) {
 
   const endPos = new THREE.Vector3();
   const endTarget = new THREE.Vector3();
+
+  const { config } = storeToRefs(useSceneStore());
 
   // ===== 当前选中
   let currentTarget: THREE.Object3D | null = null;
@@ -180,7 +184,7 @@ export function createInteractionController(opt: Options) {
 
     const scene = getScene();
     if (!scene) return;
-
+    config.value.showLabels = false;
     removeLabel();
 
     const container = document.createElement("div");
@@ -198,8 +202,9 @@ export function createInteractionController(opt: Options) {
     panel.style.transform = "translate(60px,-50%)";
     panel.style.opacity = "0";
     panel.style.transition = "all 0.25s ease";
+    panel.style.width = "0"; //解决面板视觉宽高与实际dom宽高不符问题
 
-    // 👉 下一帧进入目标态（触发动画）
+    //  下一帧进入目标态（触发动画）
     requestAnimationFrame(() => {
       panel.style.transform = "translate(20px,-50%)";
       panel.style.opacity = "1";
@@ -227,20 +232,31 @@ export function createInteractionController(opt: Options) {
     center.x = box.max.x;
     center.y += 2;
 
-    label.position.copy(center);
+    // label.position.copy(center);
+    const cam = getCamera();
+    if (cam) {
+      // 从建筑中心 → 相机方向
+      const dir = new THREE.Vector3()
+        .subVectors(cam.position, center)
+        .normalize();
+
+      const OFFSET = 0; //  控制“离屏幕更近”的程度
+
+      label.position.copy(center.clone().add(dir.multiplyScalar(OFFSET)));
+    }
 
     scene.add(label);
   }
 
   function removeLabel() {
     if (!label) return;
-
+    config.value.showLabels = true;
     const panel = (label.element as HTMLElement)
       .firstElementChild as HTMLElement;
 
     if (panel) {
       panel.style.transition = "all 0.25s ease";
-      panel.style.transform = "translate(80px,-50%)"; // 👉 往右滑走
+      panel.style.transform = "translate(80px,-50%)"; //
       panel.style.opacity = "0";
     }
 
@@ -255,7 +271,6 @@ export function createInteractionController(opt: Options) {
     }, 250);
   }
 
-  // ===== 连线绘制（屏幕空间）
   function updateLine() {
     if (!ctx || !lineCanvas || !label || !currentTarget) return;
 
@@ -293,7 +308,7 @@ export function createInteractionController(opt: Options) {
 
         ctx.beginPath();
 
-        // 👉 贝塞尔曲线（更顺滑）
+        //  贝塞尔曲线（更顺滑）
         const cx = (x1 + x2) / 2;
 
         ctx.moveTo(x1, y1);

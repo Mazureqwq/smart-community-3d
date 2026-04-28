@@ -4,6 +4,7 @@
     <!-- 3D画布 -->
     <SceneCanvas
       ref="sceneCanvasRef"
+      class="z-0"
       :selected-id="selectedBuildingId"
       @building-click="handleBuildingClick"
       @scene-ready="handleSceneReady" />
@@ -50,8 +51,6 @@ import type { BuildingProperties, BuildingIoTData } from "./types/community";
 // 初始化 Store
 const sceneStore = useSceneStore();
 sceneStore.filterDataSource();
-// 组件引用
-const sceneCanvasRef = ref<InstanceType<typeof SceneCanvas> | null>(null);
 
 // 状态 (仅保留与场景控制无关的状态)
 const fps = ref(60);
@@ -127,6 +126,7 @@ provide("sceneStore", sceneStore);
   height: 100vh;
   position: relative;
   overflow: hidden;
+  display: flex;
 }
 
 .top-bar {

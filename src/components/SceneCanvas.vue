@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, inject } from "vue";
+import { ref, onMounted, watch } from "vue";
 import * as THREE from "three";
 import { useScene } from "../composables/useScene";
 import { useBuilding } from "../composables/useBuilding";
@@ -69,54 +69,6 @@ async function initSceneContent(): Promise<void> {
   }
 }
 
-// 添加装饰元素
-function addDecorations(): void {
-  if (!scene.value) return;
-
-  const treePositions = [
-    [-30, 0, -20],
-    [30, 0, -30],
-    [-20, 0, 30],
-    [40, 0, 20],
-    [-40, 0, -10],
-  ];
-
-  treePositions.forEach((pos) => {
-    const treeGroup = createSimpleTree();
-    treeGroup.position.set(pos[0], 0, pos[2]);
-    addToScene(treeGroup);
-  });
-}
-
-// 创建简单树木
-function createSimpleTree(): THREE.Group {
-  const group = new THREE.Group();
-
-  const trunkGeo = new THREE.CylinderGeometry(0.8, 1, 4);
-  const trunkMat = new THREE.MeshStandardMaterial({
-    color: 0x8b5e3c,
-    roughness: 0.9,
-  });
-  const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-  trunk.position.y = 2;
-  trunk.castShadow = true;
-  trunk.receiveShadow = true;
-  group.add(trunk);
-
-  const crownGeo = new THREE.ConeGeometry(2.5, 5, 8);
-  const crownMat = new THREE.MeshStandardMaterial({
-    color: 0x2d5a27,
-    roughness: 0.6,
-  });
-  const crown = new THREE.Mesh(crownGeo, crownMat);
-  crown.position.y = 6;
-  crown.castShadow = true;
-  crown.receiveShadow = true;
-  group.add(crown);
-
-  return group;
-}
-
 // 处理建筑点击
 function handleBuildingClick(event: MouseEvent): void {
   if (!camera.value || !scene.value) return;
@@ -164,18 +116,6 @@ watch(
     setVisibility(show);
   },
 );
-
-// watch(
-//   () => [
-//     sceneStore.config.ambientLightIntensity,
-//     sceneStore.config.directionalLightIntensity,
-//     sceneStore.config.showGrid,
-//     sceneStore.config.isNightMode,
-//   ],
-//   () => {
-//     applySceneConfig();
-//   },
-// );
 
 // 绑定事件
 onMounted(() => {

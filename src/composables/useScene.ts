@@ -98,6 +98,7 @@ export function useScene(containerRef: Ref<HTMLElement | null>) {
     );
     newLabelRenderer.domElement.style.position = "absolute";
     newLabelRenderer.domElement.style.top = "0";
+    newLabelRenderer.domElement.style.zIndex = "1";
     newLabelRenderer.domElement.style.pointerEvents = "none";
     containerRef.value.appendChild(newLabelRenderer.domElement);
     labelRenderer.value = newLabelRenderer;

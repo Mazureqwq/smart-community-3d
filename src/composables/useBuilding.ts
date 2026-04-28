@@ -52,34 +52,6 @@ export function useBuilding() {
   const riverLists = shallowRef<RiverMesh[]>([]);
   const buildingGroup = shallowRef<THREE.Group | null>(null);
 
-  // function computeGeoCenter(features: any[]): [number, number] {
-  //   let sumX = 0;
-  //   let sumY = 0;
-  //   let count = 0;
-
-  //   features.forEach((f) => {
-  //     if (f.geometry.type !== "Polygon") return;
-  //     const coords = f.geometry.coordinates[0];
-  //     coords.forEach(([lng, lat]) => {
-  //       sumX += lng;
-  //       sumY += lat;
-  //       count++;
-  //     });
-  //   });
-
-  //   return [sumX / count, sumY / count];
-  // }
-
-  // function createProjector(center: [number, number], scale = 1) {
-  //   const cosLat = Math.cos((center[1] * Math.PI) / 180);
-
-  //   return (lng: number, lat: number): [number, number] => {
-  //     const x = (lng - center[0]) * EARTH_SCALE * cosLat * scale;
-  //     const y = (lat - center[1]) * EARTH_SCALE * scale;
-  //     return [x, y];
-  //   };
-  // }
-
   function generateFromGeoJSON(
     geojson: GeoJSONData,
     opacity: number = 1,
@@ -250,7 +222,7 @@ export function useBuilding() {
      float dist = distance(vWorldPosition.xz, u_scanCenter.xz);
 
 float maxRadius = 1000.0; // 扫描最大范围
-float cycle = 3.0;        // ⭐ 周期（秒）
+float cycle = 3.0;        //  周期（秒）
 
 float progress = mod(u_time, cycle) / cycle;
 float r = progress * maxRadius;

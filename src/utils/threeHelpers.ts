@@ -190,34 +190,3 @@ export function createProjector(center: [number, number], scale = 1) {
     return [x, y];
   };
 }
-export function createRightPanelLabel(
-  target: THREE.Object3D,
-  content: HTMLElement,
-) {
-  // ===== 1. 创建容器
-  const wrapper = document.createElement("div");
-  wrapper.style.position = "relative";
-  wrapper.style.pointerEvents = "auto"; // 表单可交互
-
-  // ===== 2. 右侧偏移容器（关键）
-  const panel = document.createElement("div");
-  panel.style.transform = "translate(20px, -50%)"; // 👉 右偏 + 垂直居中
-  panel.style.position = "absolute";
-  panel.style.left = "0";
-  panel.style.top = "0";
-
-  panel.appendChild(content);
-  wrapper.appendChild(panel);
-
-  // ===== 3. CSS2DObject
-  const label = new CSS2DObject(wrapper);
-
-  // ===== 4. 锚点：建筑中心
-  const box = new THREE.Box3().setFromObject(target);
-  const center = new THREE.Vector3();
-  box.getCenter(center);
-
-  label.position.copy(center);
-
-  return label;
-}
